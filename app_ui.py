@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import joblib
 import numpy as np
-import xgboost # Required for the model to load
+import xgboost
 
 # 1. Page Styling (Must be the first Streamlit command)
 st.set_page_config(page_title="Liver Diagnostic AI", page_icon="🩺", layout="centered")
@@ -25,22 +25,21 @@ st.markdown("Enter patient clinical laboratory values to get an AI-driven diagno
 
 # Load the model
 with st.spinner("Loading AI Model..."):
-    # We load the data into a temporary variable 'result' first
-    result = load_resources()
+    # Load the resources into a temporary variable
+    resources = load_resources()
 
-# Check if loading failed (result[0] will be None if it failed)
-if result[0] is None:
+# Check if loading failed
+if resources[0] is None:
     st.error("🚨 Error loading model files!")
-    st.code(f"Details: {result[1]}") 
-    st.warning("Please ensure 'liver_disease_pipeline.pkl' and 'class_mapping.pkl' are in the same folder.")
+    st.code(f"Details: {resources[1]}")
+    st.warning("Please ensure 'liver_disease_pipeline.pkl' and 'class_mapping.pkl' are in the GitHub repository.")
     st.stop()
-else:
-    # If successful, assign them to the correct variable names
-    model = result[0]
-    class_map = result[1]
+
+# Assign the loaded resources to the correct variables
+model = resources[0]
+class_map = resources[1]  # <--- This fixes the NameError you are seeing
 
 # Create Inverse Mapping (Number -> Label)
-# This line caused the error before because 'class_map' wasn't defined. Now it is.
 inv_map = {v: k for k, v in class_map.items()}
 
 # 3. Layout: Input Form
