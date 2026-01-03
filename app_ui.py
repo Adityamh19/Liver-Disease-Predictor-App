@@ -7,15 +7,16 @@ import xgboost # Required for the model to load
 # 1. Page Styling (Must be the first Streamlit command)
 st.set_page_config(page_title="Liver Diagnostic AI", page_icon="🩺", layout="centered")
 
-# 2. Load Resources with Caching (Prevents reloading on every click)
+# 2. Load Resources with Caching
 @st.cache_resource
 def load_resources():
     try:
         # Load model and mapping
-        model = joblib.load('liver_disease_pipeline.pkl')
-        class_map = joblib.load('class_mapping.pkl')
-        return model, class_map
+        loaded_model = joblib.load('liver_disease_pipeline.pkl')
+        loaded_map = joblib.load('class_mapping.pkl')
+        return loaded_model, loaded_map
     except Exception as e:
+        # Return None and the error message if something fails
         return None, str(e)
 
 # UI Header
@@ -24,16 +25,22 @@ st.markdown("Enter patient clinical laboratory values to get an AI-driven diagno
 
 # Load the model
 with st.spinner("Loading AI Model..."):
-    model, error_msg = load_resources()
+    # We load the data into a temporary variable 'result' first
+    result = load_resources()
 
-# Error Handling for Missing Files
-if model is None:
+# Check if loading failed (result[0] will be None if it failed)
+if result[0] is None:
     st.error("🚨 Error loading model files!")
-    st.code(f"Details: {error_msg}")
-    st.warning("Please ensure 'liver_disease_pipeline.pkl' and 'class_mapping.pkl' are in the same folder as this script.")
+    st.code(f"Details: {result[1]}") 
+    st.warning("Please ensure 'liver_disease_pipeline.pkl' and 'class_mapping.pkl' are in the same folder.")
     st.stop()
+else:
+    # If successful, assign them to the correct variable names
+    model = result[0]
+    class_map = result[1]
 
 # Create Inverse Mapping (Number -> Label)
+# This line caused the error before because 'class_map' wasn't defined. Now it is.
 inv_map = {v: k for k, v in class_map.items()}
 
 # 3. Layout: Input Form
@@ -85,7 +92,6 @@ if submit_btn:
         st.subheader("Diagnostic Result:")
         
         # Logic to determine color based on result text
-        # Adjust strings to match your specific notebook labels (e.g., 'no_disease' vs 'Blood Donor')
         safe_labels = ["Blood Donor", "no_disease", "suspect Blood Donor"]
         
         if any(label in str(result_text) for label in safe_labels):
