@@ -7,20 +7,20 @@ import xgboost
 # 1. Page Styling
 st.set_page_config(page_title="Liver Diagnostic AI", page_icon="🩺", layout="centered")
 
-# --- HELPER: Reference Ranges (Approximate standard medical values) ---
-# Note: These are general reference ranges. Labs vary.
+# --- HELPER: Reference Ranges (Matched to Dataset Column Names) ---
+# Ranges based on typical medical standards for these units
 REF_RANGES = {
-    'age': (1, 120),
-    'albumin': (35, 55),       # g/L
-    'alkaline_phosphatase': (40, 150), # U/L
-    'alanine_aminotransferase': (7, 56), # U/L
-    'aspartate_aminotransferase': (10, 40), # U/L
-    'bilirubin': (1.7, 20.5),  # µmol/L (Assuming standard units for this dataset)
-    'cholinesterase': (4, 12), # kU/L
-    'cholesterol': (2.5, 7.8), # mmol/L
-    'creatinina': (50, 110),   # µmol/L
-    'gamma_glutamyl_transferase': (9, 48), # U/L
-    'protein': (60, 80)        # g/L
+    'Age': (1, 120),
+    'ALB': (35, 55),       # Albumin (g/L)
+    'ALP': (40, 150),      # Alkaline Phosphatase (U/L)
+    'ALT': (7, 56),        # Alanine Aminotransferase (U/L)
+    'AST': (10, 40),       # Aspartate Aminotransferase (U/L)
+    'BIL': (1.7, 20.5),    # Bilirubin (µmol/L)
+    'CHE': (4, 12),        # Cholinesterase (kU/L)
+    'CHOL': (2.5, 7.8),    # Cholesterol (mmol/L)
+    'CREA': (50, 110),     # Creatinine (µmol/L)
+    'GGT': (9, 48),        # Gamma-Glutamyl Transferase (U/L)
+    'PROT': (60, 80)       # Total Protein (g/L)
 }
 
 def analyze_biomarkers(inputs):
@@ -29,7 +29,7 @@ def analyze_biomarkers(inputs):
     report_data = []
     
     for feature, value in inputs.items():
-        if feature == 'sex': continue # Skip sex
+        if feature == 'Sex': continue # Skip sex
         
         low, high = REF_RANGES.get(feature, (0, 9999))
         status = "Normal"
@@ -42,7 +42,7 @@ def analyze_biomarkers(inputs):
             abnormalities.append(f"{feature} is High")
             
         report_data.append({
-            "Biomarker": feature.replace('_', ' ').title(),
+            "Biomarker": feature,
             "Patient Value": value,
             "Normal Range": f"{low} - {high}",
             "Status": status
@@ -82,6 +82,7 @@ with st.form("prediction_form"):
     col1, col2 = st.columns(2)
 
     with col1:
+        # Default values set to 'Healthy' range. Change these to test 'Disease' output.
         age = st.number_input("Age (Years)", min_value=1, max_value=110, value=45)
         sex = st.selectbox("Sex", options=[1, 0], format_func=lambda x: "Male" if x==1 else "Female")
         
@@ -92,7 +93,7 @@ with st.form("prediction_form"):
         ggt = st.number_input("GGT (Gamma-Glutamyl Transferase) [U/L]", value=20.0)
 
     with col2:
-        st.write("") # Spacer
+        st.write("") 
         st.write("") 
         st.markdown("**Proteins & Others**")
         alb = st.number_input("ALB (Albumin) [g/L]", value=38.0)
@@ -106,18 +107,25 @@ with st.form("prediction_form"):
 
 # 4. Prediction & Detailed Analysis Logic
 if submit_btn:
-    # 4.1 Prepare Data
+    # 4.1 Prepare Data with CORRECT COLUMN NAMES (Critical for XGBoost)
+    # The keys here MUST match the column names from your training CSV exactly.
     input_dict = {
-        'age': age, 'sex': sex, 'albumin': alb, 'alkaline_phosphatase': alp,
-        'alanine_aminotransferase': alt, 'aspartate_aminotransferase': ast,
-        'bilirubin': bil, 'cholinesterase': che, 'cholesterol': chol,
-        'creatinina': crea, 'gamma_glutamyl_transferase': ggt, 'protein': prot
+        'Age': age, 
+        'Sex': sex, 
+        'ALB': alb, 
+        'ALP': alp,
+        'ALT': alt, 
+        'AST': ast,
+        'BIL': bil, 
+        'CHE': che, 
+        'CHOL': chol,
+        'CREA': crea, 
+        'GGT': ggt, 
+        'PROT': prot
     }
     
-    # DataFrame must match training order
-    input_df = pd.DataFrame([[
-        age, sex, alb, alp, alt, ast, bil, che, chol, crea, ggt, prot
-    ]], columns=input_dict.keys())
+    # Create DataFrame with correct column order
+    input_df = pd.DataFrame([input_dict])
 
     try:
         # 4.2 Get AI Prediction
