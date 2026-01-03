@@ -13,31 +13,34 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- HELPER: Medical Reference Ranges ---
+# --- HELPER: Medical Reference Ranges (Updated to match Model Feature Names) ---
 REF_RANGES = {
-    'Age': (1, 120),
-    'ALB': (35, 55),       # g/L
-    'ALP': (40, 150),      # U/L
-    'ALT': (7, 56),        # U/L
-    'AST': (10, 40),       # U/L
-    'BIL': (1.7, 20.5),    # µmol/L
-    'CHE': (4, 12),        # kU/L
-    'CHOL': (2.5, 7.8),    # mmol/L
-    'CREA': (50, 110),     # µmol/L
-    'GGT': (9, 48),        # U/L
-    'PROT': (60, 80)       # g/L
+    'age': (1, 120),
+    'albumin': (35, 55),       
+    'alkaline_phosphatase': (40, 150),      
+    'alanine_aminotransferase': (7, 56),       
+    'aspartate_aminotransferase': (10, 40),       
+    'bilirubin': (1.7, 20.5),    
+    'cholinesterase': (4, 12),        
+    'cholesterol': (2.5, 7.8),    
+    'creatinina': (50, 110),     
+    'gamma_glutamyl_transferase': (9, 48),        
+    'protein': (60, 80)       
 }
 
 def get_abnormalities(inputs):
     """Identifies which markers are out of range."""
     issues = []
     for feature, value in inputs.items():
-        if feature == 'Sex': continue
+        if feature == 'sex': continue
+        # cleanup feature name for display
+        display_name = feature.replace('_', ' ').title()
         low, high = REF_RANGES.get(feature, (0, 9999))
+        
         if value < low:
-            issues.append(f"Low {feature} ({value})")
+            issues.append(f"Low {display_name} ({value})")
         elif value > high:
-            issues.append(f"Elevated {feature} ({value})")
+            issues.append(f"Elevated {display_name} ({value})")
     return issues
 
 def plot_probabilities(proba_dict):
@@ -105,16 +108,30 @@ with st.form("main_form"):
     analyze = st.form_submit_button("🔍 Run Advanced Analysis", use_container_width=True)
 
 if analyze:
-    # STRICT COLUMN ORDER MATCHING THE DATASET
-    # These names match 'Dataset-620.csv' exactly.
+    # STRICT COLUMN MATCHING: Mapping inputs to the EXACT names the model expects
     input_data = {
-        'Age': age, 'Sex': sex, 'ALB': alb, 'ALP': alp, 'ALT': alt, 
-        'AST': ast, 'BIL': bil, 'CHE': che, 'CHOL': chol, 
-        'CREA': crea, 'GGT': ggt, 'PROT': prot
+        'age': age, 
+        'sex': sex, 
+        'albumin': alb, 
+        'alkaline_phosphatase': alp, 
+        'alanine_aminotransferase': alt, 
+        'aspartate_aminotransferase': ast, 
+        'bilirubin': bil, 
+        'cholinesterase': che, 
+        'cholesterol': chol, 
+        'creatinina': crea, 
+        'gamma_glutamyl_transferase': ggt, 
+        'protein': prot
     }
     
     # Ensure DataFrame columns are in the correct order
-    cols_order = ['Age', 'Sex', 'ALB', 'ALP', 'ALT', 'AST', 'BIL', 'CHE', 'CHOL', 'CREA', 'GGT', 'PROT']
+    cols_order = [
+        'age', 'sex', 'albumin', 'alkaline_phosphatase', 
+        'alanine_aminotransferase', 'aspartate_aminotransferase', 
+        'bilirubin', 'cholinesterase', 'cholesterol', 
+        'creatinina', 'gamma_glutamyl_transferase', 'protein'
+    ]
+    
     input_df = pd.DataFrame([input_data], columns=cols_order)
 
     try:
@@ -133,7 +150,9 @@ if analyze:
             else:
                 st.error(f"### Primary Diagnosis: {result_text}")
         with col_conf:
-            st.metric("Confidence", f"{proba_dict[result_text]*100:.1f}%")
+            # Safely get confidence score
+            conf_val = proba_dict.get(result_text, 0)
+            st.metric("Confidence", f"{conf_val*100:.1f}%")
 
         # TABS
         t1, t2, t3 = st.tabs(["📊 Confidence Analysis", "🧬 Clinical Factors", "⚙️ Debug Info"])
@@ -151,7 +170,7 @@ if analyze:
                 st.success("• All biomarkers within reference range.")
 
         with t3:
-            st.write("This data was sent to the model:")
+            st.write("Data sent to model:")
             st.dataframe(input_df)
 
     except Exception as e:
