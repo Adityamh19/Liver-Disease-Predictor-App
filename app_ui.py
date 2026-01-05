@@ -14,9 +14,9 @@ st.set_page_config(
 )
 
 # --- HELPER: Medical Reference Ranges ---
-# Updated 'age' to cover 0 to 120
+# Updated 'age' to allow decimals (0.0 to 120.0) for infants/newborns
 REF_RANGES = {
-    'age': (0, 120),
+    'age': (0.0, 120.0),
     'albumin': (35, 55),        
     'alkaline_phosphatase': (40, 150),      
     'alanine_aminotransferase': (7, 56),        
@@ -89,8 +89,9 @@ with st.form("main_form"):
     c1, c2, c3 = st.columns(3)
     with c1:
         st.subheader("1. Demographics")
-        # --- UPDATE: Min value set to 0 to allow newborns/all ages ---
-        age = st.number_input("Age (Years)", min_value=0, max_value=120, value=45, step=1)
+        # --- FIXED: Using floats (0.0) allows for infants/partial years ---
+        # value=45.0 sets the type to float. min_value=0.0 allows newborns.
+        age = st.number_input("Age (Years)", min_value=0.0, max_value=120.0, value=45.0, step=1.0)
         sex = st.selectbox("Sex", [1, 0], format_func=lambda x: "Male" if x==1 else "Female")
     with c2:
         st.subheader("2. Enzymes")
