@@ -13,9 +13,10 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- HELPER: Medical Reference Ranges (Updated to match Model Feature Names) ---
+# --- HELPER: Medical Reference Ranges ---
+# Updated 'age' to cover 0 to 120
 REF_RANGES = {
-    'age': (1, 120),
+    'age': (0, 120),
     'albumin': (35, 55),        
     'alkaline_phosphatase': (40, 150),      
     'alanine_aminotransferase': (7, 56),        
@@ -88,8 +89,8 @@ with st.form("main_form"):
     c1, c2, c3 = st.columns(3)
     with c1:
         st.subheader("1. Demographics")
-        # --- CORRECTED CODE HERE: Explicit min/max range for Age ---
-        age = st.number_input("Age", min_value=1, max_value=120, value=45, step=1)
+        # --- UPDATE: Min value set to 0 to allow newborns/all ages ---
+        age = st.number_input("Age (Years)", min_value=0, max_value=120, value=45, step=1)
         sex = st.selectbox("Sex", [1, 0], format_func=lambda x: "Male" if x==1 else "Female")
     with c2:
         st.subheader("2. Enzymes")
