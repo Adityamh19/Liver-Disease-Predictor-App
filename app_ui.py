@@ -16,16 +16,16 @@ st.set_page_config(
 # --- HELPER: Medical Reference Ranges (Updated to match Model Feature Names) ---
 REF_RANGES = {
     'age': (1, 120),
-    'albumin': (35, 55),       
+    'albumin': (35, 55),        
     'alkaline_phosphatase': (40, 150),      
-    'alanine_aminotransferase': (7, 56),       
-    'aspartate_aminotransferase': (10, 40),       
+    'alanine_aminotransferase': (7, 56),        
+    'aspartate_aminotransferase': (10, 40),        
     'bilirubin': (1.7, 20.5),    
     'cholinesterase': (4, 12),        
     'cholesterol': (2.5, 7.8),    
-    'creatinina': (50, 110),     
+    'creatinina': (50, 110),      
     'gamma_glutamyl_transferase': (9, 48),        
-    'protein': (60, 80)       
+    'protein': (60, 80)        
 }
 
 def get_abnormalities(inputs):
@@ -88,7 +88,8 @@ with st.form("main_form"):
     c1, c2, c3 = st.columns(3)
     with c1:
         st.subheader("1. Demographics")
-        age = st.number_input("Age", 45)
+        # --- CORRECTED CODE HERE: Explicit min/max range for Age ---
+        age = st.number_input("Age", min_value=1, max_value=120, value=45, step=1)
         sex = st.selectbox("Sex", [1, 0], format_func=lambda x: "Male" if x==1 else "Female")
     with c2:
         st.subheader("2. Enzymes")
